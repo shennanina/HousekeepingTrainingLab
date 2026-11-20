@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Housekeeping Learning Dashboard — Politeknik Kota Kinabalu</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    background: #f0f4f8;
+    color: #1f2328;
+  }
+
+  /* ── Header ── */
+  header {
+    background: #1e3a5f;
+    color: #fff;
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 { font-size: 18px; font-weight: 700; }
+  header p  { font-size: 12px; opacity: .75; }
+
+  /* ── Tab Nav ── */
+  .tab-nav {
+    display: flex;
+    background: #fff;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 0 32px;
+    gap: 4px;
+  }
+  .tab-btn {
+    padding: 12px 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #57606a;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color .2s, border-color .2s;
+  }
+  .tab-btn.active { color: #1e3a5f; border-bottom-color: #1e3a5f; }
+  .tab-btn:hover:not(.active) { color: #1e3a5f; }
+
+  /* ── Layout ── */
+  .view { display: none; padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin-bottom: 6px;
+  }
+  .section-sub {
+    color: #57606a;
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+
+  /* ── Bed-type cards row ── */
+  .bed-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .bed-tab-btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 2px solid #cbd5e1;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #57606a;
+    transition: all .2s;
+  }
+  .bed-tab-btn.active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+
+  /* ── Guide card ── */
+  .guide-panel { display: none; }
+  .guide-panel.active { display: block; }
+
+  .guide-card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .guide-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin-bottom: 4px;
+  }
+  .guide-card .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    font-weight: 600;
+    letter-spacing: .4px;
+  }
+  .badge-single { background: #dbeafe; color: #1d4ed8; }
+  .badge-queen  { background: #ede9fe; color: #6d28d9; }
+  .badge-king   { background: #fef3c7; color: #92400e; }
+
+  /* Steps */
+  .steps { list-style: none; counter-reset: step-counter; }
+  .steps li {
+    counter-increment: step-counter;
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+  .steps li::before {
+    content: counter(step-counter);
+    min-width: 28px;
+    height: 28px;
+    background: #1e3a5f;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-content strong { display: block; font-size: 14px; }
+  .step-content span   { font-size: 13px; color: #57606a; }
+
+  /* Bed illustration */
+  .bed-diagram {
+    text-align: center;
+    margin: 18px 0 20px;
+  }
+  .bed-diagram svg { max-width: 320px; width: 100%; }
+  .bed-diagram figcaption { font-size: 12px; color: #57606a; margin-top: 6px; }
+
+  /* Tips box */
+  .tips-box {
+    background: #f0fdf4;
+    border-left: 4px solid #22c55e;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-top: 16px;
+  }
+  .tips-box strong { font-size: 13px; color: #166534; }
+  .tips-box ul { margin: 6px 0 0 16px; font-size: 13px; color: #166534; }
+
+  /* Mistakes box */
+  .mistakes-box {
+    background: #fff7ed;
+    border-left: 4px solid #f97316;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-top: 12px;
+  }
+  .mistakes-box strong { font-size: 13px; color: #9a3412; }
+  .mistakes-box ul { margin: 6px 0 0 16px; font-size: 13px; color: #9a3412; }
+
+  /* ── Self-assessment checklist ── */
+  .checklist-card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    padding: 24px;
+  }
+  .checklist-card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin-bottom: 14px;
+  }
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-item input[type="checkbox"] {
+    width: 17px; height: 17px; cursor: pointer; flex-shrink: 0; margin-top: 2px;
+  }
+  .checklist-item label { font-size: 14px; cursor: pointer; }
+  .checklist-item input:checked + label { text-decoration: line-through; color: #aaa; }
+
+  .checklist-progress {
+    margin-top: 14px;
+    font-size: 13px;
+    color: #57606a;
+  }
+  .progress-bar-wrap {
+    background: #e5e7eb;
+    border-radius: 20px;
+    height: 8px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: #1e3a5f;
+    border-radius: 20px;
+    transition: width .3s;
+  }
+
+  /* ── Lecturer view ── */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .summary-card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    padding: 16px 18px;
+    text-align: center;
+  }
+  .summary-card .s-label { font-size: 12px; color: #57606a; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .summary-card .s-value { font-size: 28px; font-weight: 800; color: #1e3a5f; }
+  .summary-card .s-sub   { font-size: 11px; color: #aaa; }
+
+  /* Tracker table */
+  .tracker-wrap {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    overflow: auto;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th {
+    background: #1e3a5f;
+    color: #fff;
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  thead th:not(:first-child) { text-align: center; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody td { padding: 9px 14px; border-bottom: 1px solid #f0f0f0; }
+  tbody td:not(:first-child) { text-align: center; }
+  tbody td input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #1e3a5f; }
+
+  .status-pill {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  .pill-done    { background: #dcfce7; color: #166534; }
+  .pill-partial { background: #fef9c3; color: #854d0e; }
+  .pill-pending { background: #f3f4f6; color: #6b7280; }
+
+  /* search / filter */
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .toolbar input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 220px;
+  }
+  .toolbar select {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .btn-reset {
+    padding: 8px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    color: #57606a;
+  }
+  .btn-reset:hover { background: #f3f4f6; }
+
+  /* print */
+  @media print {
+    .tab-nav, .toolbar { display: none; }
+    .view { display: block !important; }
+  }
+
+  /* responsive */
+  @media (max-width: 600px) {
+    .view { padding: 16px; }
+    header { padding: 14px 16px; }
+    .tab-nav { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🛏️ Housekeeping Learning Dashboard</h1>
+    <p>Politeknik Kota Kinabalu — Food, Beverage &amp; Housekeeping Department</p>
+  </div>
+</header>
+
+<!-- Tab Nav -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('student')">📖 Student Guide</button>
+  <button class="tab-btn"        onclick="switchTab('lecturer')">📋 Lecturer Tracker</button>
+</nav>
+
+<!-- ════════════════════════════════════════════
+     STUDENT VIEW
+════════════════════════════════════════════ -->
+<div id="view-student" class="view active">
+  <div class="section-title">Bed Making — Self-Study Guide</div>
+  <div class="section-sub">Select a bed type below to view the step-by-step guide and complete your self-assessment checklist.</div>
+
+  <!-- Bed type selector -->
+  <div class="bed-tabs">
+    <button class="bed-tab-btn active" onclick="switchBed('single', this)">🛏 Single Bed</button>
+    <button class="bed-tab-btn"       onclick="switchBed('queen',  this)">🛏 Queen Bed</button>
+    <button class="bed-tab-btn"       onclick="switchBed('king',   this)">🛏 King Bed</button>
+  </div>
+
+  <!-- ── SINGLE BED ── -->
+  <div id="guide-single" class="guide-panel active">
+    <div class="guide-card">
+      <h3>Single Bed Making</h3>
+      <span class="badge badge-single">Single — 90 × 190 cm</span>
+
+      <div class="bed-diagram">
+        <figure>
+          <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="80" width="260" height="70" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+            <rect x="20" y="55" width="70" height="35" rx="5" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="1.5"/>
+            <rect x="40" y="88" width="220" height="50" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+            <text x="150" y="118" text-anchor="middle" font-size="11" fill="#1d4ed8" font-family="sans-serif">Mattress Area</text>
+            <text x="55" y="77" text-anchor="middle" font-size="10" fill="#1e40af" font-family="sans-serif">Pillow</text>
+          </svg>
+          <figcaption>Top-view diagram — Single Bed (1 pillow, 1 mattress)</figcaption>
+        </figure>
+      </div>
+
+      <ol class="steps">
+        <li><div class="step-content"><strong>Strip the bed</strong><span>Remove all used linen — pillowcase, top sheet, bottom sheet, and mattress protector. Place in the laundry trolley.</span></div></li>
+        <li><div class="step-content"><strong>Inspect the mattress</strong><span>Check for stains, damage, or odour. Flip or rotate the mattress if required per property SOP.</span></div></li>
+        <li><div class="step-content"><strong>Place the mattress protector</strong><span>Lay the protector evenly over the mattress, ensuring all four corners are secured with fitted elastics.</span></div></li>
+        <li><div class="step-content"><strong>Lay the bottom sheet</strong><span>Centre the sheet lengthwise. Tuck in at the head end first, pull taut, and make a hospital (45°) corner at each foot corner.</span></div></li>
+        <li><div class="step-content"><strong>Add the top sheet</strong><span>Place with the hem facing up at the head. Leave a 30 cm turndown at the top. Tuck in sides and make hospital corners at the foot.</span></div></li>
+        <li><div class="step-content"><strong>Add the blanket / duvet</strong><span>Align the blanket 15 cm below the top of the bed. Fold the top sheet over the blanket edge for a clean turndown.</span></div></li>
+        <li><div class="step-content"><strong>Dress the pillow</strong><span>Insert the pillow into the case. Fluff and place centred at the head of the bed, open end facing away from the door.</span></div></li>
+        <li><div class="step-content"><strong>Final inspection</strong><span>Stand at the foot of the bed. Check symmetry, tautness of sheets, and that the bed skirt (if any) hangs evenly.</span></div></li>
+      </ol>
+
+      <div class="tips-box">
+        <strong>✅ Pro Tips</strong>
+        <ul>
+          <li>Always work from the same side of the bed to save time and steps.</li>
+          <li>Use your body weight (not just arms) to pull the sheet taut.</li>
+          <li>Keep corners crisp — 45° mitre is the industry standard.</li>
+        </ul>
+      </div>
+      <div class="mistakes-box">
+        <strong>⚠️ Common Mistakes</strong>
+        <ul>
+          <li>Uneven sheet overhang on left vs right side.</li>
+          <li>Pillow placed with the open end facing the door.</li>
+          <li>Blanket not aligned symmetrically.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="checklist-card">
+      <h3>✏️ Self-Assessment — Single Bed</h3>
+      <div id="cl-single">
+        <div class="checklist-item"><input type="checkbox" id="s1" onchange="updateProgress('single')"><label for="s1">I stripped all used linen correctly and placed it in the laundry trolley</label></div>
+        <div class="checklist-item"><input type="checkbox" id="s2" onchange="updateProgress('single')"><label for="s2">I inspected the mattress for stains and damage</label></div>
+        <div class="checklist-item"><input type="checkbox" id="s3" onchange="updateProgress('single')"><label for="s3">I placed the mattress protector with all four corners secured</label></div>
+        <div class="checklist-item"><input type="checkbox" id="s4" onchange="updateProgress('single')"><label for="s4">I laid the bottom sheet with correct hospital corners</label></div>
+        <div class="checklist-item"><input type="checkbox" id="s5" onchange="updateProgress('single')"><label for="s5">I placed the top sheet with a 30 cm turndown at the head</label></div>
+        <div class="checklist-item"><input type="checkbox" id="s6" onchange="updateProgress('single')"><label for="s6">I added the blanket/duvet aligned 15 cm from the top</label></div>
+        <div class="checklist-item"><input type="checkbox" id="s7" onchange="updateProgress('single')"><label for="s7">I dressed the pillow and positioned it correctly (open end away from door)</label></div>
+        <div class="checklist-item"><input type="checkbox" id="s8" onchange="updateProgress('single')"><label for="s8">I completed a final visual inspection from the foot of the bed</label></div>
+      </div>
+      <div class="checklist-progress">
+        <span id="prog-single-text">0 of 8 steps completed</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-single-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── QUEEN BED ── -->
+  <div id="guide-queen" class="guide-panel">
+    <div class="guide-card">
+      <h3>Queen Bed Making</h3>
+      <span class="badge badge-queen">Queen — 150 × 200 cm</span>
+
+      <div class="bed-diagram">
+        <figure>
+          <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="80" width="280" height="70" rx="6" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+            <rect x="10" y="52" width="80" height="38" rx="5" fill="#ddd6fe" stroke="#6d28d9" stroke-width="1.5"/>
+            <rect x="100" y="52" width="80" height="38" rx="5" fill="#ddd6fe" stroke="#6d28d9" stroke-width="1.5"/>
+            <rect x="30" y="88" width="240" height="50" rx="4" fill="#f5f3ff" stroke="#a78bfa" stroke-width="1"/>
+            <text x="150" y="118" text-anchor="middle" font-size="11" fill="#6d28d9" font-family="sans-serif">Mattress Area</text>
+            <text x="50"  y="74" text-anchor="middle" font-size="10" fill="#5b21b6" font-family="sans-serif">Pillow 1</text>
+            <text x="140" y="74" text-anchor="middle" font-size="10" fill="#5b21b6" font-family="sans-serif">Pillow 2</text>
+          </svg>
+          <figcaption>Top-view diagram — Queen Bed (2 pillows side by side)</figcaption>
+        </figure>
+      </div>
+
+      <ol class="steps">
+        <li><div class="step-content"><strong>Strip the bed</strong><span>Remove all linen including 2 pillowcases, top sheet, bottom sheet, and mattress protector.</span></div></li>
+        <li><div class="step-content"><strong>Inspect &amp; rotate the mattress</strong><span>Queen beds are heavier — use two-person rotation where possible. Check for wear on both sides.</span></div></li>
+        <li><div class="step-content"><strong>Place the mattress protector</strong><span>Queen protectors have deeper pockets. Ensure all four corners are fully stretched and fitted.</span></div></li>
+        <li><div class="step-content"><strong>Lay the bottom sheet</strong><span>Start from the head. The wider sheet requires you to walk around the bed more — keep it centred with equal overhang on both sides (approx 30–35 cm each side).</span></div></li>
+        <li><div class="step-content"><strong>Add the top sheet</strong><span>Hem side up at the head. Create a 30 cm turndown. Tuck in both sides firmly and make hospital corners at the foot — both left and right.</span></div></li>
+        <li><div class="step-content"><strong>Add the blanket / duvet</strong><span>Align 15 cm from the head. Fold the top sheet over the blanket. Ensure equal overhang on both sides of the bed.</span></div></li>
+        <li><div class="step-content"><strong>Dress 2 pillows</strong><span>Fluff both pillows. Place side by side at the head with open ends facing each other (or both away from door — follow property SOP).</span></div></li>
+        <li><div class="step-content"><strong>Final inspection</strong><span>Check from both the foot and the side. Ensure centre seam of the top sheet aligns with the centre of the bed.</span></div></li>
+      </ol>
+
+      <div class="tips-box">
+        <strong>✅ Pro Tips</strong>
+        <ul>
+          <li>Always start tucking from the head and work towards the foot — prevents re-work.</li>
+          <li>For a queen, the top sheet overhang should be symmetrical on left and right.</li>
+          <li>Two pillows should be level with each other — use the headboard as a reference line.</li>
+        </ul>
+      </div>
+      <div class="mistakes-box">
+        <strong>⚠️ Common Mistakes</strong>
+        <ul>
+          <li>Uneven side overhang — one side tucked too tight, the other too loose.</li>
+          <li>Pillows at different heights or angled instead of straight.</li>
+          <li>Mattress protector not fully covering corners — gaps expose the mattress.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="checklist-card">
+      <h3>✏️ Self-Assessment — Queen Bed</h3>
+      <div id="cl-queen">
+        <div class="checklist-item"><input type="checkbox" id="q1" onchange="updateProgress('queen')"><label for="q1">I stripped all used linen including both pillowcases</label></div>
+        <div class="checklist-item"><input type="checkbox" id="q2" onchange="updateProgress('queen')"><label for="q2">I inspected and rotated the mattress correctly</label></div>
+        <div class="checklist-item"><input type="checkbox" id="q3" onchange="updateProgress('queen')"><label for="q3">I placed the queen-size mattress protector with all four deep corners secured</label></div>
+        <div class="checklist-item"><input type="checkbox" id="q4" onchange="updateProgress('queen')"><label for="q4">I centred the bottom sheet with equal overhang on both sides</label></div>
+        <div class="checklist-item"><input type="checkbox" id="q5" onchange="updateProgress('queen')"><label for="q5">I made hospital corners at BOTH foot corners</label></div>
+        <div class="checklist-item"><input type="checkbox" id="q6" onchange="updateProgress('queen')"><label for="q6">I added the blanket/duvet with equal overhang on both sides</label></div>
+        <div class="checklist-item"><input type="checkbox" id="q7" onchange="updateProgress('queen')"><label for="q7">I dressed 2 pillows and placed them side by side correctly</label></div>
+        <div class="checklist-item"><input type="checkbox" id="q8" onchange="updateProgress('queen')"><label for="q8">I confirmed the centre seam is aligned and the bed is symmetrical</label></div>
+      </div>
+      <div class="checklist-progress">
+        <span id="prog-queen-text">0 of 8 steps completed</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-queen-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── KING BED ── -->
+  <div id="guide-king" class="guide-panel">
+    <div class="guide-card">
+      <h3>King Bed Making</h3>
+      <span class="badge badge-king">King — 180 × 200 cm</span>
+
+      <div class="bed-diagram">
+        <figure>
+          <svg viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5"  y="78" width="310" height="72" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+            <rect x="5"  y="48" width="88"  height="40" rx="5" fill="#fde68a" stroke="#d97706" stroke-width="1.5"/>
+            <rect x="103" y="48" width="88" height="40" rx="5" fill="#fde68a" stroke="#d97706" stroke-width="1.5"/>
+            <rect x="201" y="48" width="88" height="40" rx="5" fill="#fde68a" stroke="#d97706" stroke-width="1.5"/>
+            <rect x="25" y="86" width="270" height="52" rx="4" fill="#fffbeb" stroke="#fbbf24" stroke-width="1"/>
+            <text x="160" y="116" text-anchor="middle" font-size="11" fill="#92400e" font-family="sans-serif">Mattress Area</text>
+            <text x="49"  y="72" text-anchor="middle" font-size="9"  fill="#78350f" font-family="sans-serif">Pillow 1</text>
+            <text x="147" y="72" text-anchor="middle" font-size="9"  fill="#78350f" font-family="sans-serif">Pillow 2</text>
+            <text x="245" y="72" text-anchor="middle" font-size="9"  fill="#78350f" font-family="sans-serif">Pillow 3</text>
+          </svg>
+          <figcaption>Top-view diagram — King Bed (3 pillows or 2 king-size pillows)</figcaption>
+        </figure>
+      </div>
+
+      <ol class="steps">
+        <li><div class="step-content"><strong>Strip the bed</strong><span>Remove all linen. King beds may have 2–3 pillows (or king-size pillows). Remove all pillowcases and place in laundry.</span></div></li>
+        <li><div class="step-content"><strong>Inspect &amp; rotate the mattress</strong><span>King mattresses are very heavy — always use two people. Rotate head-to-foot or flip according to the rotation schedule.</span></div></li>
+        <li><div class="step-content"><strong>Place the mattress protector</strong><span>King protectors have the deepest pockets. Work your way around all four corners, stretching the elastic fully under the mattress.</span></div></li>
+        <li><div class="step-content"><strong>Lay the bottom sheet</strong><span>King sheets require extra attention to centring. Overhang should be 35–40 cm on all sides. Tuck in head first, then walk to the foot and tuck firmly.</span></div></li>
+        <li><div class="step-content"><strong>Add the top sheet</strong><span>The king top sheet is wider. Ensure it is perfectly centred using the centre seam. Create hospital corners at both foot corners. Tuck sides, leaving a small amount loose for guest comfort.</span></div></li>
+        <li><div class="step-content"><strong>Add the blanket / duvet</strong><span>King duvets are heavier — shake and fluff before placing. Align 15 cm from the head. The duvet should hang equally on both sides and at the foot.</span></div></li>
+        <li><div class="step-content"><strong>Add the decorative runner (if applicable)</strong><span>Fold the decorative runner in thirds and place across the foot of the bed, aligned with the edge.</span></div></li>
+        <li><div class="step-content"><strong>Dress 2–3 pillows</strong><span>Use king-size pillowcases if available. Stack or arrange pillows per property SOP. Ensure they are plumped and free of lumps.</span></div></li>
+        <li><div class="step-content"><strong>Final inspection</strong><span>Walk around the entire bed. Check all four sides for symmetry, tautness, corner neatness, and pillow alignment.</span></div></li>
+      </ol>
+
+      <div class="tips-box">
+        <strong>✅ Pro Tips</strong>
+        <ul>
+          <li>For a king bed, always have a partner — it saves time and ensures symmetry.</li>
+          <li>Use the centre seam of the sheet as your alignment guide throughout.</li>
+          <li>Walk around all four sides before declaring the bed complete.</li>
+        </ul>
+      </div>
+      <div class="mistakes-box">
+        <strong>⚠️ Common Mistakes</strong>
+        <ul>
+          <li>Bottom sheet not centred — one side has significantly more overhang than the other.</li>
+          <li>Duvet not shaken/fluffed — lumpy appearance.</li>
+          <li>Pillows not aligned to a straight horizontal line.</li>
+          <li>Skipping the walk-around final inspection.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="checklist-card">
+      <h3>✏️ Self-Assessment — King Bed</h3>
+      <div id="cl-king">
+        <div class="checklist-item"><input type="checkbox" id="k1" onchange="updateProgress('king')"><label for="k1">I stripped all used linen including all pillowcases</label></div>
+        <div class="checklist-item"><input type="checkbox" id="k2" onchange="updateProgress('king')"><label for="k2">I rotated the mattress with a partner (two-person technique)</label></div>
+        <div class="checklist-item"><input type="checkbox" id="k3" onchange="updateProgress('king')"><label for="k3">I placed the king mattress protector with all corners fully stretched</label></div>
+        <div class="checklist-item"><input type="checkbox" id="k4" onchange="updateProgress('king')"><label for="k4">I centred the bottom sheet with 35–40 cm overhang on all sides</label></div>
+        <div class="checklist-item"><input type="checkbox" id="k5" onchange="updateProgress('king')"><label for="k5">I made hospital corners at BOTH foot corners and tucked sides</label></div>
+        <div class="checklist-item"><input type="checkbox" id="k6" onchange="updateProgress('king')"><label for="k6">I shook and fluffed the duvet before placing it on the bed</label></div>
+        <div class="checklist-item"><input type="checkbox" id="k7" onchange="updateProgress('king')"><label for="k7">I placed the decorative runner at the foot of the bed (if required)</label></div>
+        <div class="checklist-item"><input type="checkbox" id="k8" onchange="updateProgress('king')"><label for="k8">I dressed 2–3 pillows and arranged them according to SOP</label></div>
+        <div class="checklist-item"><input type="checkbox" id="k9" onchange="updateProgress('king')"><label for="k9">I completed a walk-around inspection on all four sides of the bed</label></div>
+      </div>
+      <div class="checklist-progress">
+        <span id="prog-king-text">0 of 9 steps completed</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-king-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     LECTURER VIEW
+════════════════════════════════════════════ -->
+<div id="view-lecturer" class="view">
+  <div class="section-title">Student Progress Tracker</div>
+  <div class="section-sub">Mark each bed type as completed for each student. Progress updates automatically.</div>
+
+  <!-- Summary cards -->
+  <div class="summary-row">
+    <div class="summary-card">
+      <div class="s-label">Total Students</div>
+      <div class="s-value" id="sum-total">30</div>
+      <div class="s-sub">enrolled</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-label">🛏 Single Completed</div>
+      <div class="s-value" id="sum-single">0</div>
+      <div class="s-sub">out of 30</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-label">🛏 Queen Completed</div>
+      <div class="s-value" id="sum-queen">0</div>
+      <div class="s-sub">out of 30</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-label">🛏 King Completed</div>
+      <div class="s-value" id="sum-king">0</div>
+      <div class="s-sub">out of 30</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-label">✅ All 3 Completed</div>
+      <div class="s-value" id="sum-all">0</div>
+      <div class="s-sub">fully competent</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" id="search-input" placeholder="🔍 Search student name…" oninput="filterTable()">
+    <select id="filter-status" onchange="filterTable()">
+      <option value="all">All Students</option>
+      <option value="done">All Completed</option>
+      <option value="partial">In Progress</option>
+      <option value="pending">Not Started</option>
+    </select>
+    <button class="btn-reset" onclick="resetAll()">Reset All</button>
+  </div>
+
+  <!-- Tracker table -->
+  <div class="tracker-wrap">
+    <table id="tracker-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Student Name</th>
+          <th>🛏 Single</th>
+          <th>🛏 Queen</th>
+          <th>🛏 King</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tracker-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ── student names (placeholder — replace with actual class list) ──
+const students = [
+  "Student 1","Student 2","Student 3","Student 4","Student 5",
+  "Student 6","Student 7","Student 8","Student 9","Student 10",
+  "Student 11","Student 12","Student 13","Student 14","Student 15",
+  "Student 16","Student 17","Student 18","Student 19","Student 20",
+  "Student 21","Student 22","Student 23","Student 24","Student 25",
+  "Student 26","Student 27","Student 28","Student 29","Student 30"
+];
+
+// ── Tab switching ──
+function switchTab(tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Bed guide switching ──
+function switchBed(bed, btn) {
+  document.querySelectorAll('.guide-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bed-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('guide-' + bed).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Self-assessment progress ──
+function updateProgress(bed) {
+  const container = document.getElementById('cl-' + bed);
+  const boxes = container.querySelectorAll('input[type="checkbox"]');
+  const checked = [...boxes].filter(b => b.checked).length;
+  const total = boxes.length;
+  document.getElementById('prog-' + bed + '-text').textContent = checked + ' of ' + total + ' steps completed';
+  document.getElementById('prog-' + bed + '-bar').style.width = Math.round(checked / total * 100) + '%';
+}
+
+// ── Build tracker table ──
+const state = students.map(() => ({ single: false, queen: false, king: false }));
+
+function buildTable() {
+  const tbody = document.getElementById('tracker-body');
+  tbody.innerHTML = '';
+  students.forEach((name, i) => {
+    const tr = document.createElement('tr');
+    tr.dataset.index = i;
+    tr.dataset.name = name.toLowerCase();
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${name}</td>
+      <td><input type="checkbox" ${state[i].single ? 'checked' : ''} onchange="toggle(${i},'single')"></td>
+      <td><input type="checkbox" ${state[i].queen  ? 'checked' : ''} onchange="toggle(${i},'queen')"></td>
+      <td><input type="checkbox" ${state[i].king   ? 'checked' : ''} onchange="toggle(${i},'king')"></td>
+      <td>${statusPill(i)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateSummary();
+}
+
+function statusPill(i) {
+  const s = state[i];
+  const done = [s.single, s.queen, s.king].filter(Boolean).length;
+  if (done === 3) return '<span class="status-pill pill-done">All Done</span>';
+  if (done > 0)  return '<span class="status-pill pill-partial">In Progress</span>';
+  return '<span class="status-pill pill-pending">Pending</span>';
+}
+
+function toggle(i, bed) {
+  state[i][bed] = !state[i][bed];
+  const tbody = document.getElementById('tracker-body');
+  const rows = tbody.querySelectorAll('tr');
+  rows.forEach(tr => {
+    if (parseInt(tr.dataset.index) === i) {
+      tr.cells[5].innerHTML = statusPill(i);
+    }
+  });
+  updateSummary();
+}
+
+function updateSummary() {
+  let s = 0, q = 0, k = 0, all = 0;
+  state.forEach(st => {
+    if (st.single) s++;
+    if (st.queen)  q++;
+    if (st.king)   k++;
+    if (st.single && st.queen && st.king) all++;
+  });
+  document.getElementById('sum-single').textContent = s;
+  document.getElementById('sum-queen').textContent  = q;
+  document.getElementById('sum-king').textContent   = k;
+  document.getElementById('sum-all').textContent    = all;
+}
+
+function filterTable() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const filter = document.getElementById('filter-status').value;
+  const rows = document.querySelectorAll('#tracker-body tr');
+  rows.forEach(tr => {
+    const i = parseInt(tr.dataset.index);
+    const name = tr.dataset.name;
+    const done = [state[i].single, state[i].queen, state[i].king].filter(Boolean).length;
+    const statusMatch =
+      filter === 'all' ||
+      (filter === 'done'    && done === 3) ||
+      (filter === 'partial' && done > 0 && done < 3) ||
+      (filter === 'pending' && done === 0);
+    const nameMatch = name.includes(search);
+    tr.style.display = (statusMatch && nameMatch) ? '' : 'none';
+  });
+}
+
+function resetAll() {
+  if (!confirm('Reset ALL student progress? This cannot be undone.')) return;
+  state.forEach(s => { s.single = false; s.queen = false; s.king = false; });
+  buildTable();
+}
+
+buildTable();
+</script>
+
+</body>
+</html>
